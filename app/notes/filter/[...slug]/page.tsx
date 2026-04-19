@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import NotesClient from "./Notes.client";
+import NotesClient from "@/components/NotesClient/NotesClient";
 import type { NoteTag } from "@/types/note";
 
 interface NotesPageProps {
