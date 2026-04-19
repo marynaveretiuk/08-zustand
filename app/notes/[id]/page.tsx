@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { fetchNoteById } from "@/lib/api/notes";
-import css from "./page.module.css";
+import NoteDetailsClient from "./NoteDetails.client";
 
 interface NoteDetailsPageProps {
   params: Promise<{
@@ -31,12 +31,6 @@ export async function generateMetadata({
     return {
       title: "Note not found | NoteHub",
       description: "The requested note does not exist.",
-      openGraph: {
-        title: "Note not found | NoteHub",
-        description: "The requested note does not exist.",
-        url: `https://your-vercel-app.vercel.app/notes/${id}`,
-        images: ["https://ac.goit.global/fullstack/react/notehub-og-meta.jpg"],
-      },
     };
   }
 }
@@ -50,15 +44,11 @@ export default async function NoteDetailsPage({
     const note = await fetchNoteById(id);
 
     return (
-      <main className={css.main}>
-        <div className={css.container}>
-          <article className={css.card}>
-            <h1 className={css.title}>{note.title}</h1>
-            <p className={css.content}>{note.content}</p>
-            <p className={css.tag}>{note.tag}</p>
-          </article>
-        </div>
-      </main>
+      <NoteDetailsClient
+        title={note.title}
+        content={note.content}
+        tag={note.tag}
+      />
     );
   } catch {
     notFound();
