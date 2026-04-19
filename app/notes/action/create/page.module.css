@@ -1,0 +1,19 @@
+.main {
+    min-height: 100vh;
+    padding: 40px 0;
+    background-color: #f9fafb;
+}
+
+.container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 16px;
+}
+
+.title {
+    margin: 0 0 24px;
+    font-size: 32px;
+    line-height: 1.2;
+    font-weight: 700;
+    color: #111827;
+}
