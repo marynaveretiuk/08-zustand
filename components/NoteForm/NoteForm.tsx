@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 import { createNote } from "@/lib/api/notes";
 import { initialDraft, useNoteStore } from "@/lib/store/noteStore";
 import type { NewNoteData } from "@/types/note";
+
 import css from "./NoteForm.module.css";
 
 const tagOptions: NewNoteData["tag"][] = [
@@ -17,18 +20,29 @@ const tagOptions: NewNoteData["tag"][] = [
 
 export default function NoteForm() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+
   const draft = useNoteStore((state) => state.draft);
   const setDraft = useNoteStore((state) => state.setDraft);
   const clearDraft = useNoteStore((state) => state.clearDraft);
 
   const [formData, setFormData] = useState<NewNoteData>(initialDraft);
   const [isHydrated, setIsHydrated] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setFormData(draft);
     setIsHydrated(true);
   }, [draft]);
+
+  const mutation = useMutation({
+    mutationFn: createNote,
+    onSuccess: async () => {
+      clearDraft();
+      await queryClient.invalidateQueries({ queryKey: ["notes"] });
+      router.push("/notes/filter/all");
+      router.refresh();
+    },
+  });
 
   const handleChange = (
     event: React.ChangeEvent<
@@ -57,17 +71,7 @@ export default function NoteForm() {
       return;
     }
 
-    try {
-      setIsSubmitting(true);
-      await createNote({ title, content, tag });
-      clearDraft();
-      router.push("/notes/filter/all");
-      router.refresh();
-    } catch (error) {
-      console.error("Failed to create note:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    mutation.mutate({ title, content, tag });
   };
 
   const handleCancel = () => {
@@ -126,16 +130,16 @@ export default function NoteForm() {
         <button
           className={css.submitButton}
           type="submit"
-          disabled={isSubmitting}
+          disabled={mutation.isPending}
         >
-          {isSubmitting ? "Creating..." : "Create"}
+          {mutation.isPending ? "Creating..." : "Create"}
         </button>
 
         <button
           className={css.cancelButton}
           type="button"
           onClick={handleCancel}
-          disabled={isSubmitting}
+          disabled={mutation.isPending}
         >
           Cancel
         </button>
