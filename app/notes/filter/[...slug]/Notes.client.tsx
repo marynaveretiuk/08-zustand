@@ -1,20 +1,20 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 
-import { fetchNotes } from "@/lib/api/notes";
-import type { NoteTag } from "@/types/note";
+import { fetchNotes } from '@/lib/api/notes';
+import type { NoteTag } from '@/types/note';
 
-import SearchBox from "@/components/SearchBox/SearchBox";
-import Pagination from "@/components/Pagination/Pagination";
-import NoteList from "@/components/NoteList/NoteList";
-import Loader from "@/components/Loader/Loader";
-import ErrorMessage from "@/components/ErrorMessage/ErrorMessage";
+import SearchBox from '@/components/SearchBox/SearchBox';
+import Pagination from '@/components/Pagination/Pagination';
+import NoteList from '@/components/NoteList/NoteList';
+import Loader from '@/components/Loader/Loader';
+import ErrorMessage from '@/components/ErrorMessage/ErrorMessage';
 
-import css from "@/components/NotesClient/NotesClient.module.css";
+import css from './Notes.client.module.css';
 
 interface NotesClientProps {
   initialTag: NoteTag;
@@ -24,8 +24,8 @@ export default function NotesClient({ initialTag }: NotesClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const page = Number(searchParams.get("page") ?? "1");
-  const searchFromUrl = searchParams.get("search") ?? "";
+  const page = Number(searchParams.get('page') ?? '1');
+  const searchFromUrl = searchParams.get('search') ?? '';
 
   const [searchValue, setSearchValue] = useState(searchFromUrl);
   const [debouncedSearch, setDebouncedSearch] = useState(searchFromUrl);
@@ -47,12 +47,12 @@ export default function NotesClient({ initialTag }: NotesClientProps) {
     const params = new URLSearchParams(searchParams.toString());
 
     if (debouncedSearch) {
-      params.set("search", debouncedSearch);
+      params.set('search', debouncedSearch);
     } else {
-      params.delete("search");
+      params.delete('search');
     }
 
-    params.set("page", "1");
+    params.set('page', '1');
 
     const nextUrl = `/notes/filter/${initialTag}?${params.toString()}`;
     const currentUrl = `/notes/filter/${initialTag}?${searchParams.toString()}`;
@@ -63,7 +63,7 @@ export default function NotesClient({ initialTag }: NotesClientProps) {
   }, [debouncedSearch, initialTag, router, searchParams]);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["notes", initialTag, page, debouncedSearch],
+    queryKey: ['notes', initialTag, page, debouncedSearch],
     queryFn: () =>
       fetchNotes({
         page,
@@ -78,7 +78,7 @@ export default function NotesClient({ initialTag }: NotesClientProps) {
 
   const handlePageChange = (nextPage: number) => {
     const params = new URLSearchParams(searchParams.toString());
-    params.set("page", String(nextPage));
+    params.set('page', String(nextPage));
 
     router.push(`/notes/filter/${initialTag}?${params.toString()}`);
   };
