@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
@@ -24,30 +25,55 @@ export default function NotesClient({ initialTag }: NotesClientProps) {
   const searchParams = useSearchParams();
 
   const page = Number(searchParams.get("page") ?? "1");
-  const search = searchParams.get("search") ?? "";
+  const searchFromUrl = searchParams.get("search") ?? "";
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["notes", initialTag, page, search],
-    queryFn: () =>
-      fetchNotes({
-        page,
-        search,
-        tag: initialTag,
-      }),
-  });
+  const [searchValue, setSearchValue] = useState(searchFromUrl);
+  const [debouncedSearch, setDebouncedSearch] = useState(searchFromUrl);
 
-  const handleSearch = (value: string) => {
+  useEffect(() => {
+    setSearchValue(searchFromUrl);
+    setDebouncedSearch(searchFromUrl);
+  }, [searchFromUrl]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchValue);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchValue]);
+
+  useEffect(() => {
     const params = new URLSearchParams(searchParams.toString());
 
-    if (value) {
-      params.set("search", value);
+    if (debouncedSearch) {
+      params.set("search", debouncedSearch);
     } else {
       params.delete("search");
     }
 
     params.set("page", "1");
 
-    router.push(`/notes/filter/${initialTag}?${params.toString()}`);
+    const nextUrl = `/notes/filter/${initialTag}?${params.toString()}`;
+    const currentUrl = `/notes/filter/${initialTag}?${searchParams.toString()}`;
+
+    if (nextUrl !== currentUrl) {
+      router.push(nextUrl);
+    }
+  }, [debouncedSearch, initialTag, router, searchParams]);
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["notes", initialTag, page, debouncedSearch],
+    queryFn: () =>
+      fetchNotes({
+        page,
+        search: debouncedSearch,
+        tag: initialTag,
+      }),
+  });
+
+  const handleSearchChange = (value: string) => {
+    setSearchValue(value);
   };
 
   const handlePageChange = (nextPage: number) => {
@@ -67,7 +93,7 @@ export default function NotesClient({ initialTag }: NotesClientProps) {
     <main className={css.main}>
       <div className={css.container}>
         <div className={css.toolbar}>
-          <SearchBox initialValue={search} onSearch={handleSearch} />
+          <SearchBox value={searchValue} onSearch={handleSearchChange} />
 
           <Link className={css.createButton} href="/notes/action/create">
             Create note +
